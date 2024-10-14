@@ -1,0 +1,53 @@
+version: 2.1
+
+jobs:
+  build:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout:
+          # 最新20コミットのみを取得
+          depth: 20
+      - run:
+          name: Check for Changes in .circleci/ Directory
+          command: |
+            # 差分を取得（最新20コミット内の変更を対象）
+            CHANGED_FILES=$(git diff origin/${CIRCLE_BRANCH}...HEAD --name-only)
+
+            echo "Changed files:"
+            echo "$CHANGED_FILES"
+
+            if echo "$CHANGED_FILES" | grep -q "^\.circleci/"; then
+              echo ".circleci/ ディレクトリに変更があります。"
+
+              # コミット作者を取得（最新コミットの作者）
+              COMMIT_AUTHOR=$(git log -1 --pretty=format:'%an')
+              echo "Commit author: $COMMIT_AUTHOR"
+
+              # 許可されたユーザーのリストを取得
+              ALLOWED_USERS=("user1" "user2" "user3")  # ここに .circleci/ 変更を許可する GitHub ユーザー名を追加
+              
+              AUTHORIZED=false
+              for user in "${ALLOWED_USERS[@]}"; do
+                if [[ "$COMMIT_AUTHOR" == "$user" ]]; then
+                  AUTHORIZED=true
+                  break
+                fi
+              done
+
+              if [ "$AUTHORIZED" = false ]; then
+                echo "エラー: ユーザー '$COMMIT_AUTHOR' は .circleci/ ディレクトリの変更を許可されていません。"
+                exit 1
+              else
+                echo "ユーザー '$COMMIT_AUTHOR' は .circleci/ ディレクトリの変更を許可されています。"
+              fi
+            else
+              echo ".circleci/ ディレクトリに変更はありません。"
+            fi
+
+      - run:
+          name: Prevent Further Execution if Unauthorized
+          command: |
+            # ここでは特に追加の処理は不要です。前のステップでexit 1しているため、
+            # このステップに到達するのは許可されたユーザーのみとなります。
+            echo "変更が許可されています。"
