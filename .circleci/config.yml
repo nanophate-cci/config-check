@@ -11,38 +11,22 @@ jobs:
       - run:
           name: Check for Changes in .circleci/ Directory
           command: |
-            # 差分を取得（最新20コミット内の変更を対象）
-            CHANGED_FILES=$(git diff origin/${CIRCLE_BRANCH}...HEAD --name-only)
+            # 許可されたユーザーリストをハードコーディング
+            ALLOWED_USERS=("user1" "user2" "user3")  # ここに許可するGitHubユーザー名を追加
 
-            echo "Changed files:"
-            echo "$CHANGED_FILES"
+            # 許可ユーザーの正規表現パターンを作成
+            pattern=$(printf "|%s" "${ALLOWED_USERS[@]}")
+            pattern=${pattern:1} # 先頭の|を削除
 
-            if echo "$CHANGED_FILES" | grep -q "^\.circleci/"; then
-              echo ".circleci/ ディレクトリに変更があります。"
+            # 最新20コミットで .circleci/ ディレクトリに変更を加えたユニークな作者を取得
+            unauthorized_authors=$(git log -n20 --pretty=format:"%an" -- .circleci/ | sort | uniq | grep -v -E "^(${pattern})$")
 
-              # コミット作者を取得（最新コミットの作者）
-              COMMIT_AUTHOR=$(git log -1 --pretty=format:'%an')
-              echo "Commit author: $COMMIT_AUTHOR"
-
-              # 許可されたユーザーのリストを取得
-              ALLOWED_USERS=("user1" "user2" "user3")  # ここに .circleci/ 変更を許可する GitHub ユーザー名を追加
-              
-              AUTHORIZED=false
-              for user in "${ALLOWED_USERS[@]}"; do
-                if [[ "$COMMIT_AUTHOR" == "$user" ]]; then
-                  AUTHORIZED=true
-                  break
-                fi
-              done
-
-              if [ "$AUTHORIZED" = false ]; then
-                echo "エラー: ユーザー '$COMMIT_AUTHOR' は .circleci/ ディレクトリの変更を許可されていません。"
-                exit 1
-              else
-                echo "ユーザー '$COMMIT_AUTHOR' は .circleci/ ディレクトリの変更を許可されています。"
-              fi
+            if [ -n "$unauthorized_authors" ]; then
+              echo "エラー: 以下のユーザーは .circleci/ ディレクトリの変更を許可されていません:"
+              echo "$unauthorized_authors"
+              exit 1
             else
-              echo ".circleci/ ディレクトリに変更はありません。"
+              echo "すべての .circleci/ ディレクトリへの変更は許可されたユーザーによるものです。"
             fi
 
       - run:
