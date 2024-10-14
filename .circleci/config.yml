@@ -5,9 +5,7 @@ jobs:
     docker:
       - image: cimg/base:stable
     steps:
-      - checkout:
-          # 最新20コミットのみを取得
-          depth: 20
+      - checkout
       - run:
           name: Check for Changes in .circleci/ Directory
           command: |
