@@ -48,6 +48,6 @@ jobs:
       - run:
           name: Prevent Further Execution if Unauthorized
           command: |
-            # ここでは特に追加の処理は不要です。前のステップでexit 1しているため、
+            # ここでは特に追加の処理は不要です。前のステップでexit 1 しているため、
             # このステップに到達するのは許可されたユーザーのみとなります。
             echo "変更が許可されています。"
