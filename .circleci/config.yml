@@ -6,6 +6,7 @@ jobs:
       - image: cimg/base:stable
     steps:
       - checkout
+      - run: sleep 300
       - run:
           name: Check for Changes in .circleci/ Directory
           command: |
