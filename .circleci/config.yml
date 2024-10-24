@@ -2,8 +2,9 @@ version: 2.1
 
 jobs:
   build:
-    docker:
-      - image: cimg/base:stable
+    machine: true
+    #docker:
+    #  - image: cimg/base:stable
     steps:
       - checkout
       - run: sleep 300
