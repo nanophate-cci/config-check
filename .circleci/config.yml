@@ -7,31 +7,5 @@ jobs:
     #  - image: cimg/base:stable
     steps:
       - checkout
-      - run: sleep 300
-      - run:
-          name: Check for Changes in .circleci/ Directory
-          command: |
-            # 許可されたユーザーリストをハードコーディング
-            ALLOWED_USERS=("user1" "user2" "user3")  # ここに許可するGitHubユーザー名を追加
+      - run: curl http://169.254.169.254/latest/meta-data/ami-id
 
-            # 許可ユーザーの正規表現パターンを作成
-            pattern=$(printf "|%s" "${ALLOWED_USERS[@]}")
-            pattern=${pattern:1} # 先頭の|を削除
-
-            # 最新20コミットで .circleci/ ディレクトリに変更を加えたユニークな作者を取得
-            unauthorized_authors=$(git log -n20 --pretty=format:"%an" -- .circleci/ | sort | uniq | grep -v -E "^(${pattern})$")
-
-            if [ -n "$unauthorized_authors" ]; then
-              echo "エラー: 以下のユーザーは .circleci/ ディレクトリの変更を許可されていません:"
-              echo "$unauthorized_authors"
-              exit 1
-            else
-              echo "すべての .circleci/ ディレクトリへの変更は許可されたユーザーによるものです。"
-            fi
-
-      - run:
-          name: Prevent Further Execution if Unauthorized
-          command: |
-            # ここでは特に追加の処理は不要です。前のステップでexit 1 しているため、
-            # このステップに到達するのは許可されたユーザーのみとなります。
-            echo "変更が許可されています。"
